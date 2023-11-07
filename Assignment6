@@ -1,0 +1,25 @@
+merged_df = flights.merge(airlines, left_on='carrier', right_on='carrier', how='inner')
+
+avg_dep_delay = merged_df.groupby('name')['dep_delay'].agg(average_dep_delay='mean').reset_index()
+
+flights_airports = flights.merge(airports, left_on='dest', right_on='faa', how='left')
+
+missing_airport_rows = flights_airports['faa'].isna().sum()
+
+num_in_flights = flights['dest'].nunique()
+
+num_in_airports = airports['faa'].nunique()
+
+nyc_planes = flights[['tailnum', 'carrier']].drop_duplicates()
+planes_carriers = planes.merge(nyc_planes, on='tailnum', how='inner')
+check = planes.merge(nyc_planes, on='tailnum', how='left')
+differences = check[~check.isin(planes_carriers)].dropna()
+
+planes_flights = planes.merge(flights, on='tailnum', how='right', suffixes=('_pln', '_flt'))
+flights_model = planes_flights[~planes_flights['model'].isnull()]
+type_distribution = flights_model['type'].value_counts()
+model_count = flights_model.groupby('model')['tailnum'].count().reset_index()
+
+routes = flights[['flight', 'origin', 'dest']].drop_duplicates()
+routes_self_merged = routes.merge(routes, left_on='dest', right_on='dest', how='inner', suffixes=('_1', '_2'))
+routes = routes_self_merged[routes_self_merged['dest_1'] != routes_self_merged['dest_2']]
